@@ -63,7 +63,7 @@ def query(ticker):
 	return mentions, upvotes
 
 
-tickers = ['GME', 'SNDL', 'BBBY', 'DOGE', 'TLRY', 'BB', 'NOK']
+tickers = ['NOK']
 
 
 for ticker in tickers:
