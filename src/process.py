@@ -74,13 +74,13 @@ def display(data, ticker):
 	y = [j[0] for j in y.values][::-1]
 	y = [i/max(y) for i in y][140:]
 
-	print(x)
 	plt.plot(x, y, label = 'engagement')
 	plt.plot(stock_x, stock_y, linewidth = 4, color = 'purple', label = ticker)
 	plt.xticks(x[::20], rotation=45)
 	plt.tight_layout()
 	plt.legend()
-	plt.show()
+	plt.savefig(f'../images/{ticker}_eng_vs_price.png')
+	#plt.show()
 
 def display_eng():
 	tickers = ['GME', 'AMC', 'BBBY', 'BB', 'SNDL', 'TLRY', 'NOK']
@@ -89,8 +89,10 @@ def display_eng():
 		d = open_json(ticker)
 		display(d, ticker)
 
-
+'''
 d = open_json("AMC")
 display(d, "AMC")
+'''
 
+display_eng()
 
