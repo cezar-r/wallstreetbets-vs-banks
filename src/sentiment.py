@@ -84,9 +84,9 @@ def stock_plot_data(ticker):
 
 
 
-def display(data, ticker):
+def display_rel_max(data, ticker):
 	stock_x, stock_y = stock_plot_data(ticker)
-	stock_y = [(stock_y[i] - stock_y[i-1])/stock_y[i-1] for i in range(1, len(stock_y))]
+	stock_y = [i/max(stock_y) for i in stock_y][1:]
 
 	data['scores'] = data.iloc[:, 0].apply(text_to_score)
 	data.drop(data.columns[0], axis=1, inplace=True)
@@ -115,8 +115,43 @@ def display(data, ticker):
 	plt.savefig(f'../images/price_vs_sentiment/{ticker}_price_vs_sent.png')
 
 
-tickers = ['AMC', 'GME', 'BB', 'SNDL', 'TLRY', 'NOK']
-for ticker in tickers:
+def display_percent(data, ticker):
+	stock_x, stock_y = stock_plot_data(ticker)
+	stock_y = [(stock_y[i] - stock_y[i-1])/stock_y[i-1] for i in range(1, len(stock_y))]
 
-	d = open_json(ticker)
-	display(d, ticker)
+	data['scores'] = data.iloc[:, 0].apply(text_to_score)
+	data.drop(data.columns[0], axis=1, inplace=True)
+	data_t = data.T 
+
+	x = data.index.values.tolist()[::-1]
+	new_x = []
+	for date in x:
+		if date in stock_x:
+			new_x.append(date)
+
+	new_y = []
+	for date in new_x:
+		new_y.append(data_t.loc['scores', date])
+	new_y = [i/max(new_y) for i in new_y]
+
+	plt.style.use("dark_background")
+	fig, ax = plt.subplots(figsize=(18, 9))
+	plt.plot(stock_x, stock_y, color='fuchsia', linewidth = 3, label = f'${ticker} Share Price % Change')
+	plt.plot(new_x, new_y, label = f'Sentiment % Change')
+	plt.xlabel("Date")
+	plt.xticks(new_x[::8], rotation = 45)
+	plt.ylabel(f"% change")
+	plt.title(f'${ticker} Share Price vs Sentiment % Change')
+	plt.legend()
+	#plt.show()
+	plt.savefig(f'../images/price_vs_sentiment_per/{ticker}_price_vs_sent.png')
+
+
+if __name__ == '__main__':
+
+	tickers = ['AMC', 'GME', 'BB', 'SNDL', 'TLRY', 'NOK']
+	for ticker in tickers:
+
+		d = open_json(ticker)
+		#display_rel_max(d, ticker)
+		display_percent(d, ticker)
