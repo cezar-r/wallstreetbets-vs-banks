@@ -4,10 +4,11 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 KEY = '919abee0cf38b0288f06795a2303033c'
 
 def open_json(ticker):
-	f = open(f'../data/{ticker}_data.txt',)
+	f = open(f'../data/engagement_data/{ticker}_data.txt',)
 	data = json.load(f)
 	df = pd.DataFrame(data[ticker])
 	return df
@@ -54,6 +55,8 @@ def get_stock_data(ticker):
 
 
 def stock_plot_data(ticker):
+	if __name__ != '__main__':
+		print('Oher file called me')
 	stock_data = get_stock_data(ticker)
 	stock_x = list(stock_data.keys())[::-1]
 	stock_x = [i + ':00 am' if int(i[:2]) < 12 else i + ':00 pm' for i in stock_x]
@@ -113,10 +116,15 @@ def display_change(data, ticker):
 
 
 def display_eng():
-	tickers = ['GME', 'AMC', 'BBBY', 'BB', 'SNDL', 'TLRY', 'NOK']
+	tickers = ['BB', 'SNDL', 'TLRY', 'NOK']
 	for ticker in tickers:
 
 		d = open_json(ticker)
 		display_change(d, ticker)
 
-display_eng()
+
+if __name__ == '__main__':
+	display_eng()
+
+# correlation coefficient
+# 
