@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-KEY = '919abee0cf38b0288f06795a2303033c'
+KEY = '311bbfc7214b34671449b6d6f1e9f247'
 
 def open_json(ticker):
 	f = open(f'../data/engagement_data/{ticker}_data.txt',)
@@ -66,7 +66,7 @@ def stock_plot_data(ticker):
 
 def display(data, ticker):
 	stock_x, stock_y = stock_plot_data(ticker)
-	stock_y = [i/max(stock_y) for i in stock_y]
+	stock_y = [i/max(stock_y) for i in stock_y][1:]
 
 	plt.style.use("dark_background")
 	fig, ax = plt.subplots(figsize=(18, 9))
@@ -84,12 +84,20 @@ def display(data, ticker):
 	plt.ylabel("Relative to maximum", fontsize=16)
 	plt.tight_layout()
 	plt.legend()
-	plt.savefig(f'../images/price_vs_eng/{ticker}_eng_vs_price.png')
-	#plt.show()
+	# plt.savefig(f'../images/price_vs_eng/{ticker}_eng_vs_price.png')
+	# plt.show()
+	y = [i for i in y[-len(stock_y):]]
+	cur_corr = coefficient(np.array(y), np.array(stock_y))
+	prev_corr, future_corr = corr_diff_day((x, y), (stock_x, stock_y))
+	return {'Stock': ticker, 'Same Day Correlation' : cur_corr, "Prev Day Correlation" : prev_corr, "Next Day Correlation" : future_corr}
 
 
 def percent_change(x1, x2):
 	return (x2-x1)/x1
+
+
+def coefficient(x, y):
+	return np.corrcoef(x, y)[0, 1]
 
 
 def display_change(data, ticker):
@@ -112,19 +120,71 @@ def display_change(data, ticker):
 	plt.ylabel(f'% change')
 	plt.tight_layout()
 	plt.legend()
-	plt.savefig(f'../images/prices_vs_eng_per/{ticker}_eng_vs_price_per.png')
+	#plt.savefig(f'../images/prices_vs_eng_per/{ticker}_eng_vs_price_per.png')
+	
+	y = [i for i in y[-len(stock_y):]]
+	cur_corr = coefficient(np.array(y), np.array(stock_y))
+	prev_corr, future_corr = corr_diff_day((x, y), (stock_x, stock_y))
+	return {'Stock': ticker, 'Same Day Correlation' : cur_corr, "Prev Day Correlation" : prev_corr, "Next Day Correlation" : future_corr}
+
+
+def copy(arr):
+	return [i for i in arr]
+
+
+def rotate(arr, n):
+	return arr[n:] + arr[:n]
+
+
+def trim(arr, y_arr, correct_arr, prev = True):
+	idx = arr.index(correct_arr[0])
+	if prev:
+		arr = arr[idx:]
+		y_arr = y_arr[idx:]
+	else:
+		arr = arr[:idx]
+		y_arr = y_arr[:idx]
+	return arr, y_arr
+
+
+def corr_diff_day(eng, stock):
+	x, y = eng
+	prev_x = copy(x)
+	future_x = copy(x)
+	prev_y = copy(y)
+	future_y = copy(y)
+	stock_x, stock_y = stock
+	
+	prev_x = rotate(prev_x, -10)
+	future_x = rotate(future_x, 10)
+	prev_y = rotate(prev_y, -10)
+	future_y = rotate(future_y, 10)
+	
+	prev_x, prev_y = trim(prev_x, prev_y, x)
+	future_x, future_y = trim(future_x, future_y, x, prev = False)
+	# print(x[:15])
+	# print(prev_x[:15])
+	corr_prev =  coefficient(np.array(prev_y), np.array(stock_y[10:]))
+	corr_future = coefficient(np.array(future_y), np.array(stock_y))
+	return corr_prev, corr_future
+
+
+	# take in x,y and stock_x,_stock_y
+	# move x positions back 10
+	# move x positions up 10
+	# find corr and this case
+	# return both
 
 
 def display_eng():
-	tickers = ['BB', 'SNDL', 'TLRY', 'NOK']
+	tickers = ['AMC', 'GME', 'BB', 'SNDL', 'TLRY', 'NOK']
 	for ticker in tickers:
 
 		d = open_json(ticker)
-		display_change(d, ticker)
+		# print(f'{ticker} Correlation: ', end="")
+		print(display(d, ticker))
 
 
 if __name__ == '__main__':
 	display_eng()
 
-# correlation coefficient
-# 
