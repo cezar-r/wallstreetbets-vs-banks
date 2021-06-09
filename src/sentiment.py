@@ -15,6 +15,8 @@ from process import KEY
 # also
 #		calculate dif between postive vs negative sentiment for each date
 #		graph differnce using fillbetween
+
+
 sid = SentimentIntensityAnalyzer()
 
 
@@ -83,7 +85,6 @@ def stock_plot_data(ticker):
 	return stock_x[1:], stock_y
 
 
-
 def display_rel_max(data, ticker):
 	stock_x, stock_y = stock_plot_data(ticker)
 	stock_y = [i/max(stock_y) for i in stock_y][1:]
@@ -112,7 +113,128 @@ def display_rel_max(data, ticker):
 	plt.title(f'${ticker} Share Price vs Sentiment')
 	plt.legend()
 	#plt.show()
-	plt.savefig(f'../images/price_vs_sentiment/{ticker}_price_vs_sent.png')
+	#plt.savefig(f'../images/price_vs_sentiment/{ticker}_price_vs_sent.png')
+
+def coefficient(x, y):
+	smol = min(len(x), len(y))
+	y = [y[i] for i in range(smol)]
+	return np.corrcoef(x, y)[0, 1]
+
+
+def copy(arr):
+	return [i for i in arr]
+
+
+def rotate(arr, n):
+	return arr[n:] + arr[:n]
+
+
+def trim(arr, y_arr, correct_arr, prev = True):
+	idx = arr.index(correct_arr[0])
+	if prev:
+		arr = arr[idx:]
+		y_arr = y_arr[idx:]
+	else:
+		arr = arr[:idx]
+		y_arr = y_arr[:idx]
+	return arr, y_arr
+
+
+def corr_diff_day(eng, stock):
+	x, y = eng
+	prev_x = copy(x)
+	future_x = copy(x)
+	prev_y = copy(y)
+	future_y = copy(y)
+	stock_x, stock_y = stock
+	
+	prev_x = rotate(prev_x, -1)
+	future_x = rotate(future_x, 1)
+	prev_y = rotate(prev_y, -1)
+	future_y = rotate(future_y, 1)
+	
+	prev_x, prev_y = trim(prev_x, prev_y, x)
+	future_x, future_y = trim(future_x, future_y, x, prev = False)
+
+	corr_prev =  coefficient(np.array(prev_y), np.array(stock_y[1:]))
+	corr_future = coefficient(np.array(future_y), np.array(stock_y[len(stock_y) - len(future_y):]))
+	return corr_prev, corr_future
+
+
+def display_daily_rel_max(data, ticker):
+
+	stock_x, stock_y = stock_plot_data(ticker)
+	stock_y = [i/max(stock_y) for i in stock_y][1:]
+
+	daily_stock_x = [i[:10] for i in stock_x]
+
+	stock_daily_totals = {}
+	for i, time in enumerate(daily_stock_x):
+		if time in stock_daily_totals:
+			stock_daily_totals[time].append(stock_y[i])
+		else:
+			stock_daily_totals[time] = [stock_y[i]]
+
+	stock_daily_avgs = {}
+	for k in stock_daily_totals:
+		stock_daily_avgs[k] = sum(stock_daily_totals[k])/len(stock_daily_totals[k])
+
+
+	data['scores'] = data.iloc[:, 0].apply(text_to_score)
+	data.drop(data.columns[0], axis=1, inplace=True)
+	data_t = data.T 
+
+	x = data.index.values.tolist()[::-1]
+	new_x = []
+	for date in x:
+		if date in stock_x:
+			new_x.append(date)
+
+	new_x_axis = [i[:10] for i in new_x]
+
+	new_y = []
+	for date in new_x:
+		new_y.append(data_t.loc['scores', date])
+
+	sent_daily_totals = {}
+	for i, time in enumerate(new_x):
+		if time in sent_daily_totals:
+			sent_daily_totals[time[:10]].append(new_y[i])
+		else:
+			sent_daily_totals[time[:10]] = [new_y[i]]
+
+	sent_daily_avgs = {}
+	for k in sent_daily_totals:
+		sent_daily_avgs[k] = sum(sent_daily_totals[k])/len(sent_daily_totals[k])
+
+
+	plt.style.use("dark_background")
+	fig, ax = plt.subplots(figsize=(18, 9))
+	plt.plot(list(stock_daily_avgs.keys()), list(stock_daily_avgs.values()), color='mediumslateblue', linewidth = 3, label = f'${ticker} Share Price')
+	plt.plot(list(sent_daily_avgs.keys()), list(sent_daily_avgs.values()), label = f'Sentiment % Change')
+	plt.xlabel("Date")
+	plt.xticks(list(stock_daily_avgs.keys()), rotation = 45)
+	plt.ylabel(f"Relative to maximum")
+	plt.title(f'${ticker} Share Price vs Sentiment')
+	plt.legend()
+	#plt.show()
+	plt.savefig(f'../images/daily_price_vs_sent/{ticker}_daily_price_vs_sent.png')
+
+
+	# cur_corr = coefficient(np.array(list(sent_daily_avgs.values())), np.array(list(stock_daily_avgs.values())))
+	# prev_corr, future_corr = corr_diff_day((list(sent_daily_avgs.keys()), list(sent_daily_avgs.values())), (list(stock_daily_avgs.keys()), list(stock_daily_avgs.values())))
+	# return {'Stock': ticker, 'Same Day Correlation' : cur_corr, "Prev Day Correlation" : prev_corr, "Next Day Correlation" : future_corr}
+
+	'''
+	{'Stock': 'AMC', 'Same Day Correlation': 0.1880430994649141, 'Prev Day Correlation': 0.1643244582163266, 'Next Day Correlation': 0.20964264934836863}
+	{'Stock': 'GME', 'Same Day Correlation': -0.13353840119143612, 'Prev Day Correlation': -0.26680192916383383, 'Next Day Correlation': -0.07981608799037299}
+	{'Stock': 'BB', 'Same Day Correlation': 0.14066300516384844, 'Prev Day Correlation': 0.0004447491674216089, 'Next Day Correlation': 0.12972014328056283}
+	{'Stock': 'SNDL', 'Same Day Correlation': -0.3308839745169938, 'Prev Day Correlation': -0.41927300761475034, 'Next Day Correlation': -0.41814679003020616}
+	{'Stock': 'TLRY', 'Same Day Correlation': 0.25013672132674425, 'Prev Day Correlation': -0.004957606017787319, 'Next Day Correlation': -0.19683313239289507}
+	{'Stock': 'NOK', 'Same Day Correlation': 0.26446406497637365, 'Prev Day Correlation': 0.08285193416749015, 'Next Day Correlation': 0.30708360038714383}
+	'''
+
+	
 
 
 def display_percent(data, ticker):
@@ -148,10 +270,9 @@ def display_percent(data, ticker):
 
 
 if __name__ == '__main__':
-
 	tickers = ['AMC', 'GME', 'BB', 'SNDL', 'TLRY', 'NOK']
 	for ticker in tickers:
 
 		d = open_json(ticker)
-		#display_rel_max(d, ticker)
-		display_percent(d, ticker)
+		print(display_daily_rel_max(d, ticker))
+		#display_percent(d, ticker)

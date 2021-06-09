@@ -155,25 +155,87 @@ def corr_diff_day(eng, stock):
 	future_y = copy(y)
 	stock_x, stock_y = stock
 	
-	prev_x = rotate(prev_x, -10)
-	future_x = rotate(future_x, 10)
-	prev_y = rotate(prev_y, -10)
-	future_y = rotate(future_y, 10)
+	prev_x = rotate(prev_x, -1)
+	future_x = rotate(future_x, 1)
+	prev_y = rotate(prev_y, -1)
+	future_y = rotate(future_y, 1)
 	
 	prev_x, prev_y = trim(prev_x, prev_y, x)
 	future_x, future_y = trim(future_x, future_y, x, prev = False)
-	# print(x[:15])
-	# print(prev_x[:15])
-	corr_prev =  coefficient(np.array(prev_y), np.array(stock_y[10:]))
-	corr_future = coefficient(np.array(future_y), np.array(stock_y))
+
+	corr_prev =  coefficient(np.array(prev_y[4:]), np.array(stock_y))
+	corr_future = coefficient(np.array(future_y[4:]), np.array(stock_y))
 	return corr_prev, corr_future
 
 
-	# take in x,y and stock_x,_stock_y
-	# move x positions back 10
-	# move x positions up 10
-	# find corr and this case
-	# return both
+def display_daily_avg(data, ticker):
+	stock_x, stock_y = stock_plot_data(ticker)
+	stock_y = [i/max(stock_y) for i in stock_y][1:]
+	daily_stock_x = [i[:10] for i in stock_x]
+
+	stock_daily_totals = {}
+	for i, time in enumerate(daily_stock_x):
+		if time in stock_daily_totals:
+			stock_daily_totals[time].append(stock_y[i])
+		else:
+			stock_daily_totals[time] = [stock_y[i]]
+
+	stock_daily_avgs = {}
+	for k in stock_daily_totals:
+		stock_daily_avgs[k] = sum(stock_daily_totals[k])/len(stock_daily_totals[k])
+
+	y = data.iloc[0]
+	x = [i + ':00 am' if int(i[:2]) < 12 else i + ':00 pm' for i in data][::-1][140:]
+	daily_x = [i[:10] for i in data][::-1][140:]
+	y = [j[0] + j[1]  for j in y.values][::-1]
+	y = [i/max(y) for i in y][140:]
+	
+	eng_daily_totals = {}
+	for i, time in enumerate(daily_x):
+		if time in eng_daily_totals:
+			eng_daily_totals[time].append(y[i])
+		else:
+			eng_daily_totals[time] = [y[i]]
+
+	eng_daily_avgs = {}
+	for k in eng_daily_totals:
+		eng_daily_avgs[k] = sum(eng_daily_totals[k])/len(eng_daily_totals[k])
+
+
+	plt.style.use("dark_background")
+	fig, ax = plt.subplots(figsize=(18,9))
+
+	plt.plot(list(eng_daily_avgs.keys()), list(eng_daily_avgs.values()), linewidth = 4, label = 'Engagement', solid_capstyle='round')
+	plt.fill_between(list(eng_daily_avgs.keys()), 0, list(eng_daily_avgs.values()), alpha = 0.15)
+
+	plt.plot(list(stock_daily_avgs.keys()), list(stock_daily_avgs.values()), linewidth = 4, color = 'mediumslateblue', label = f'${ticker} price', solid_capstyle='round')
+	plt.fill_between(list(stock_daily_avgs.keys()), 0, list(stock_daily_avgs.values()), color = 'mediumslateblue', alpha= 0.1)
+
+	plt.xticks(list(eng_daily_avgs.keys()), rotation=45)
+	plt.title(f'${ticker} price vs Wallstreetbets engagement')
+	plt.xlabel("Date", fontsize=18)
+	plt.ylabel("Relative to maximum", fontsize=16)
+	plt.tight_layout()
+	plt.legend()
+	#plt.show()
+	#plt.savefig(f'../images/daily_price_vs_eng/{ticker}_daily_eng_vs_price_per.png')
+
+	y = [i for i in list(eng_daily_avgs.values())[-len(list(stock_daily_avgs.values())):]]
+	cur_corr = coefficient(np.array(y), np.array(list(stock_daily_avgs.values())))
+	prev_corr, future_corr = corr_diff_day((list(eng_daily_avgs.keys()), list(eng_daily_avgs.values())), (list(stock_daily_avgs.keys()), list(stock_daily_avgs.values())))
+	return {'Stock': ticker, 'Same Day Correlation' : cur_corr, "Prev Day Correlation" : prev_corr, "Next Day Correlation" : future_corr}
+	
+
+	'''
+
+	{'Stock': 'AMC', 'Same Day Correlation': 0.7836734791979197, 'Prev Day Correlation': -0.095002426197534, 'Next Day Correlation': 0.7522435819173727}
+	{'Stock': 'GME', 'Same Day Correlation': 0.7015547092161876, 'Prev Day Correlation': -0.15977934508996347, 'Next Day Correlation': 0.6473196702717451}
+	{'Stock': 'BB', 'Same Day Correlation': 0.7510425096787338, 'Prev Day Correlation': -0.0005532303271056227, 'Next Day Correlation': 0.7172539412716349}
+	{'Stock': 'SNDL', 'Same Day Correlation': 0.7200428404381856, 'Prev Day Correlation': -0.07856040160933374, 'Next Day Correlation': 0.6745332953594741}
+	{'Stock': 'TLRY', 'Same Day Correlation': 0.7148534722081824, 'Prev Day Correlation': -0.041808424581382016, 'Next Day Correlation': 0.6758162262791414}
+	{'Stock': 'NOK', 'Same Day Correlation': 0.5355591273765817, 'Prev Day Correlation': 0.2730968257985349, 'Next Day Correlation': 0.4012833566220041}
+	'''
+
 
 
 def display_eng():
@@ -181,9 +243,8 @@ def display_eng():
 	for ticker in tickers:
 
 		d = open_json(ticker)
-		# print(f'{ticker} Correlation: ', end="")
-		print(display(d, ticker))
-
+		#print(display(d, ticker))
+		print(display_daily_avg(d, ticker))
 
 if __name__ == '__main__':
 	display_eng()
