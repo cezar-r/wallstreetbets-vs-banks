@@ -267,7 +267,7 @@ def calc_predictions(dict1, dict2, key):
 			return 0
 		if d[0] == key:
 			idx_of_key = [i for i, e in enumerate(list(dict2_items)) if e[0] == key][0]
-			if list(dict1_items)[i][1] > 0 and list(dict2_items)[idx_of_key][1] > 0:
+			if list(dict1_items)[i][1] > 0 and list(dict2_items)[idx_of_key+1][1] > 0:
 				return 1
 			else:
 				return 0
@@ -306,7 +306,7 @@ def percent_correct(eng_data, stock_data, ticker):
 		if k in stock_dict:
 			predictions += calc_predictions(eng_dict, stock_dict, k) 
 
-	positive_days = number_of_up_days(percent_change_eng_y)
+	positive_days = number_of_up_days(percent_change_stock_y)
 
 	return ticker, (predictions/positive_days)
 
@@ -365,8 +365,8 @@ def display_eng():
 	plt.style.use("dark_background")
 	fig, ax = plt.subplots(figsize=(9, 9))
 
-	plt.bar(list(predictions.keys()), list(predictions.values()), color = colors,, edg alpha = .2)
-	plt.bar(list(predictions.keys()), list(predictions.values()), color = edgecolor = ["mediumslateblue", 'fuchsia', 'springgreen', 'tomato', 'cyan', 'darkorange'])
+	plt.bar(list(predictions.keys()), list(predictions.values()), color = 'black', edgecolor = colors, zorder = 1, linewidth = 3)
+	plt.bar(list(predictions.keys()), list(predictions.values()), color = colors, alpha = 0.2, zorder = 2)
 	plt.title(f"% Chance of Share Price Increase vs Engagement Increase (Next Day)")
 	plt.xlabel("Stocks")
 	plt.ylabel("Probability of share price increase day after engagement increase")
