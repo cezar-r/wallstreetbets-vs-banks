@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import scipy.stats as stats
 
 
-KEY = 'ecf9892d82720ed87aec38497493a73a'
+KEY = '65779b0496d310893e07ff78a196f383'
 
 
 def open_json(ticker):
@@ -204,21 +204,21 @@ def display_daily_avg(data, ticker):
 		eng_daily_avgs[k] = sum(eng_daily_totals[k])/len(eng_daily_totals[k])
 
 
-	plt.style.use("dark_background")
-	fig, ax = plt.subplots(figsize=(18,9))
+	#plt.style.use("dark_background")
+	#fig, ax = plt.subplots(figsize=(18,9))
 
-	plt.plot(list(eng_daily_avgs.keys()), list(eng_daily_avgs.values()), linewidth = 4, label = 'Engagement', solid_capstyle='round')
-	plt.fill_between(list(eng_daily_avgs.keys()), 0, list(eng_daily_avgs.values()), alpha = 0.15)
+	# plt.plot(list(eng_daily_avgs.keys()), list(eng_daily_avgs.values()), linewidth = 4, label = 'Engagement', solid_capstyle='round')
+	# plt.fill_between(list(eng_daily_avgs.keys()), 0, list(eng_daily_avgs.values()), alpha = 0.15)
 
-	plt.plot(list(stock_daily_avgs.keys()), list(stock_daily_avgs.values()), linewidth = 4, color = 'mediumslateblue', label = f'${ticker} price', solid_capstyle='round')
-	plt.fill_between(list(stock_daily_avgs.keys()), 0, list(stock_daily_avgs.values()), color = 'mediumslateblue', alpha= 0.1)
+	# plt.plot(list(stock_daily_avgs.keys()), list(stock_daily_avgs.values()), linewidth = 4, color = 'mediumslateblue', label = f'${ticker} price', solid_capstyle='round')
+	# plt.fill_between(list(stock_daily_avgs.keys()), 0, list(stock_daily_avgs.values()), color = 'mediumslateblue', alpha= 0.1)
 
-	plt.xticks(list(eng_daily_avgs.keys()), rotation=45)
-	plt.title(f'${ticker} price vs Wallstreetbets engagement')
-	plt.xlabel("Date", fontsize=18)
-	plt.ylabel("Relative to maximum", fontsize=16)
-	plt.tight_layout()
-	plt.legend()
+	# plt.xticks(list(eng_daily_avgs.keys()), rotation=45)
+	# plt.title(f'${ticker} price vs Wallstreetbets engagement')
+	# plt.xlabel("Date", fontsize=18)
+	# plt.ylabel("Relative to maximum", fontsize=16)
+	# plt.tight_layout()
+	# plt.legend()
 
 	return percent_correct((list(eng_daily_avgs.keys()), list(eng_daily_avgs.values())), (list(stock_daily_avgs.keys()), list(stock_daily_avgs.values())), ticker)
 	#plt.show()
@@ -308,7 +308,7 @@ def percent_correct(eng_data, stock_data, ticker):
 
 	positive_days = number_of_up_days(percent_change_eng_y)
 
-	return f'{ticker} % chance of getting in early: {predictions/positive_days}'
+	return ticker, (predictions/positive_days)
 
 	'''
 	stock on target with engagement / total up days for that stock
@@ -351,12 +351,28 @@ def calculate_t_test(x, y, a):
 
 
 def display_eng():
+	predictions = {}
+	colors = ["mediumslateblue", 'fuchsia', 'springgreen', 'tomato', 'cyan', 'darkorange']
 	tickers = ['AMC', 'GME', 'BB', 'SNDL', 'TLRY', 'NOK']
 	for ticker in tickers:
 
 		d = open_json(ticker)
 		#print(display(d, ticker))
-		print(display_daily_avg(d, ticker))
+		ticker, probability = 	display_daily_avg(d, ticker)
+		predictions[ticker] = probability
+	print(predictions)
+
+	plt.style.use("dark_background")
+	fig, ax = plt.subplots(figsize=(9, 9))
+
+	plt.bar(list(predictions.keys()), list(predictions.values()), color = colors,, edg alpha = .2)
+	plt.bar(list(predictions.keys()), list(predictions.values()), color = edgecolor = ["mediumslateblue", 'fuchsia', 'springgreen', 'tomato', 'cyan', 'darkorange'])
+	plt.title(f"% Chance of Share Price Increase vs Engagement Increase (Next Day)")
+	plt.xlabel("Stocks")
+	plt.ylabel("Probability of share price increase day after engagement increase")
+	#plt.show()
+	plt.savefig(f'../images/bar_price_vs_eng_probability/percent_chance_next_day_stock.png')
+
 
 if __name__ == '__main__':
 	display_eng()
