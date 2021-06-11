@@ -40,8 +40,7 @@ The goal of this project is to analyze the activity on the WallStreetBets Subred
 <img src="images/daily_price_vs_sent/GME_daily_price_vs_sent.png" alt="alt text" width=400 height=300>
 
 ## Results
-The main purpose behind the EDA is to see if there is a correlation between the activity on WallStreetBets and the share price of stocks. We are will be testing for 
-The Trial 1 Error Rate will be = 0.01 for the T-Test.
+The main purpose behind the EDA is to see if there is a correlation between the activity on WallStreetBets and the share price of stocks. We will be using a Trial 1 Error Rate will of 0.01 for the T-Test.
 
 ### Definitions
 - Next Day Correlation - correlation between the engagement on a given day and share price the following day (high correlation = ahead of trend)
@@ -53,25 +52,25 @@ The Trial 1 Error Rate will be = 0.01 for the T-Test.
   * Same Day Correlation: 0.7836734791979197
   * Prev Day Correlation: -0.095002426197534
   * Next Day Correlation: 0.7522435819173727
-  * T-test: 5.141029882342577e-05
+  * p-value: 5.141029882342577e-05
 
 - **GME:**
   * Same Day Correlation: 0.7015547092161876
   * Prev Day Correlation: -0.15977934508996347
   * Next Day Correlation: 0.6473196702717451
-  * T-test: 2.1902759648971002e-18
+  * p-value: 2.1902759648971002e-18
 
 - **BB:**
   * Same Day Correlation: 0.7510425096787338
   * Prev Day Correlation: -0.0005532303271056227
   * Next Day Correlation: 0.7172539412716349
-  * T-test: 4.196445396871837e-14
+  * p-value: 4.196445396871837e-14
 
 - **SNDL:**
   * Same Day Correlation: 0.7200428404381856
   * Prev Day Correlation: -0.07856040160933374
   * Next Day Correlation: 0.6745332953594741
-  * T-test: 1.7236621209051704e-16
+  * p-value: 1.7236621209051704e-16
 
 - **TLRY:**
   * Same Day Correlation: 0.7148534722081824
@@ -87,7 +86,7 @@ The Trial 1 Error Rate will be = 0.01 for the T-Test.
 
 
 ### Conclusion
-As we can see from the results, there is a very good correlation between most of the meme stocks and the engagement on the subreddit. Looking deeper into the data, the next day correlation is also relatively high, which shows that the subreddit also tends to be ahead of the trend. Therefore, we fail to reject the null hypothesis.
+As we can see from the results, there is a very good correlation between most of the meme stocks and the engagement on the subreddit. Looking deeper into the data, the next day correlation is also relatively high, which shows that the subreddit also tends to be ahead of the trend. The resulting p-values show that there is enough statistical significance to reject the Null Hypothesis. This is assuming an alpha threshold of 0.01
 
 
 ## More Results
